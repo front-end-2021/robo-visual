@@ -1,0 +1,13 @@
+# Code Python được sinh ra từ khối lệnh của trẻ
+while True:
+    khoang_cach = robot.get_distance()
+    
+    if khoang_cach < 20:
+        # Gặp vật cản: Dừng lại một chút rồi xoay hướng khác
+        robot.set_motors(0, 0)
+        robot.delay(200)
+        robot.set_motors(-50, 50) # Bánh trái lùi, bánh phải tiến -> Xoay tại chỗ
+        robot.delay(500)
+    else:
+        # Đường thoáng: Tiếp tục đi thẳng để lau nhà
+        robot.set_motors(80, 80)

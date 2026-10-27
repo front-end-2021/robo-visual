@@ -1,0 +1,59 @@
+/**
+Để tìm giao điểm, ta sử dụng công thức định thức toán học để kiểm tra xem tia có cắt đoạn thẳng AB hay không:
+ t= (x_1-x_2)(y_p-y_2)-(y_1-y_2)(x_p-x_2) / ((x_1-x_2)(y_p-y_q)-(y_1-y_2)(x_p-x_q))
+ u= (x_p-x_q)(y_p-y_2)-(y_p-y_q)(x_p-x_2) / ((x_1-x_2)(y_p-y_q)-(y_1-y_2)(x_p-x_q))
+Trong đó Q(x_q, y_q) là một điểm nằm rất xa trên hướng bắn của tia (x_q = x_p + cos(theta) x maxDist)
+ * Hàm tính khoảng cách từ robot đến vật cản gần nhất (Giả lập cảm biến siêu âm)
+ * @param {Object} robot - Đối tượng robot (x, y, angle)
+ * @param {Array} walls - Danh sách các bức tường, mỗi tường dạng {x1, y1, x2, y2}
+ * @param {number} maxRange - Tầm xa tối đa của cảm biến siêu âm (ví dụ: 300 pixels)
+ * @returns {number} Khoảng cách ngắn nhất tìm được (nếu không thấy trả về maxRange)
+ */
+function getUltrasonicDistance(robot, walls, maxRange = 300) {
+    let minDistance = maxRange;
+
+    // 1. Xác định điểm xuất phát của tia (tâm robot) và hướng bắn tia
+    const x_p = robot.x;
+    const y_p = robot.y;
+    
+    // Điểm ảo Q nằm ở cuối tầm xa của cảm biến theo hướng góc của robot
+    const x_q = x_p + Math.cos(robot.angle) * maxRange;
+    const y_q = y_p + Math.sin(robot.angle) * maxRange;
+
+    // 2. Duyệt qua từng đoạn thẳng (bức tường) trong môi trường để tìm giao điểm
+    for (let wall of walls) {
+        const x1 = wall.x1;
+        const y1 = wall.y1;
+        const x2 = wall.x2;
+        const y2 = wall.y2;
+
+        // Tính mẫu số (Denominator)
+        const den = (x1 - x2) * (y_p - y_q) - (y1 - y2) * (x_p - x_q);
+        
+        // Nếu mẫu số bằng 0, tia và tường song song với nhau -> Không cắt
+        if (den === 0) continue;
+
+        // Tính các hệ số t và u theo công thức định thức
+        const t = ((x1 - x_p) * (y_p - y_q) - (y1 - y_p) * (x_p - x_q)) / den;
+        const u = -((x1 - x2) * (y1 - y_p) - (y1 - y2) * (x1 - x_p)) / den;
+
+        // Kiểm tra xem giao điểm có nằm trong đoạn thẳng của bức tường và trên tia bắn ra không
+        if (t >= 0 && t <= 1 && u >= 0 && u <= 1) {
+            // Tính tọa độ điểm va chạm thực tế
+            const intersectX = x1 + t * (x2 - x1);
+            const intersectY = y1 + t * (y2 - y1);
+
+            // Tính khoảng cách từ tâm robot đến điểm va chạm (Công thức Pitago)
+            const dist = Math.sqrt(Math.pow(intersectX - x_p, 2) + Math.pow(intersectY - y_p, 2));
+
+            // Cập nhật khoảng cách nhỏ nhất (vật cản gần nhất)
+            if (dist < minDistance) {
+                minDistance = dist;
+            }
+        }
+    }
+
+    // Trừ đi bán kính của robot nếu bạn muốn tính khoảng cách từ "đầu xe" thay vì từ "tâm xe"
+    const finalDistance = minDistance - (robot.radius || 0);
+    return Math.max(0, finalDistance); 
+}

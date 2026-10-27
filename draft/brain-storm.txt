@@ -1,0 +1,94 @@
+Simulation: Robot lau nhà, robot đá bóng, robot chuyển đồ (Amazon)
+bài toán cốt lõi: Kết nối giữa Khung nhập code (Code Editor) và Khung môi trường 3D/2D (Simulator Environment).
+
+Khung Giả lập (Simulator Engine) Matter.js hoặc PixiJS
+Khung Viết code (Code Editor & Compiler)
+ Dạng kéo thả (Dành cho trẻ nhỏ hoặc bước làm quen): Google Blockly
+ Dạng viết code văn bản (Dành cho trẻ lớn hơn): Pyodide 
+
+Gợi ý Lộ trình phát triển sản phẩm (MVP - Sản phẩm khả dụng tối thiểu)
+[ Giai đoạn 1: Giả lập 2D đơn giản ] 
+  └─ Robot là 1 khối vuông di chuyển trong mê cung bằng các lệnh cơ bản (Tiến, lùi, quay).
+  
+[ Giai đoạn 2: Nâng cấp lên không gian 3D ]
+  └─ Dùng Three.js dựng mô hình robot có bánh xe. Thêm các bài toán thực tế (Ví dụ: Đẩy hộp vào vị trí quy định).
+
+[ Giai đoạn 3: Tích hợp Cảm biến (Sensors) ]
+  └─ Thêm tính năng cảm biến khoảng cách (để robot tự né tường) hoặc cảm biến màu sắc (để robot đi theo vạch dòng kẻ - Line Following).
+
+Engine Vật lý & Hiển thị 2D: Matter.js (tốt nhất cho mô phỏng vật lý), PixiJS (để vẽ đồ họa mượt mà)
+Khung lập trình (Code Editor): Google Blockly để trẻ xếp hình khối lệnh, cấu hình để nó xuất ra mã JavaScript/Python.
+Cầu nối Thực thi (Execution Bridge): Sử dụng cơ chế vòng lặp requestAnimationFrame của JavaScript
+A. Hệ thống chuyển động (Kinematics)
+Arduino Car thường dùng cơ chế Differential Drive (2 bánh chủ động phía sau, 1 bánh xe đa hướng/bánh bướm phía trước):
+- Đi thẳng: Tốc độ bánh trái = Tốc độ bánh phải.
+- Xoay tại chỗ: Tốc độ bánh trái = - Tốc độ bánh phải.
+- Cua vòng: Tốc độ hai bánh lệch nhau (Bánh nào quay chậm hơn thì xe cua về phía đó)
+- Trong code giả lập: dùng thuật toán toán học để chuyển đổi từ tốc độ 2 bánh xe thành hướng di chuyển (X, Y) và góc quay (Angle θ) của robot
+B. Giả lập các loại Cảm biến (Sensors) phổ biến:
+tư duy lập trình điều khiển (Control Theory)
+Cảm biến ngoài đời	Cách giả lập trong Web App 2D	                       Ứng dụng trong bài học cho trẻ
+Cảm biến siêu âm        Bắn các tia (Raycasting) từ đầu robot ra phía trước,   Robot lau nhà: Né chướng ngại vật, né chân bàn ghế.
+(Ultrasonic HC-SR04)    tính khoảng cách đến vật cản gần nhất.
+
+Cảm biến dò đường       Kiểm tra màu sắc của điểm ảnh (Pixel) tại vị trí       Arduino Car: Lập trình cho xe chạy men theo vạch màu đen trên sàn.
+(Line IR Sensor)        đặt mắt đọc (thường là 2-3 điểm dưới gầm robot).
+
+Cảm biến va chạm        Dùng tính năng Check Collision của Matter.js           Robot đá bóng / Lau nhà: Quay đầu lại hoặc đẩy bóng khi va chạm.
+(Bumper Switch)         khi thân robot chạm vào tường/quả bóng.
+
+
+3. Gợi ý thiết kế các "Màn chơi" (Sân chơi giả lập) cho trẻ
+chia Web App thành các chế độ hoặc phòng Lab khác nhau dựa trên các loại robot bạn đã nêu:
+- Phòng Lab Robot Lau Nhà (Diện tích / Bao phủ):
+   - Bối cảnh: Một căn phòng 2D ngẫu nhiên có bàn, ghế, sofa.
+   - Nhiệm vụ: Trẻ phải lập trình thuật toán (ví dụ: thuật toán di chuyển ngẫu nhiên ziczac hoặc bám tường) 
+     để robot đi qua được nhiều diện tích sàn nhất trong vòng 2 phút. Sàn nhà robot đi qua sẽ đổi màu (thể hiện đã lau sạch).
+- Phòng Lab Robot Đá Bóng (Vật lý / Đối kháng):
+   - Bối cảnh: Sân bóng mini 2D, có khung thành và 1 quả bóng có vật lý (bo tròn, có độ nảy, có ma sát lăn).
+   - Nhiệm vụ: Lập trình cho robot dò tìm vị trí quả bóng (dựa trên khoảng cách và góc độ), tiếp cận, đẩy bóng vào lưới đối phương. 
+     Có thể nâng cấp thành màn chơi 2 robot (mình đấu với AI lập trình sẵn).
+
+4. Khả năng mở rộng: Từ Giả lập bước ra Đời thật
+Vì bạn muốn dựa trên các mô hình có thật như Arduino Car, bạn hoàn toàn có thể thiết kế hệ thống khối lệnh Blockly dịch thẳng ra code C++ (Arduino Web Editor).
+1. Trẻ thử nghiệm, sửa lỗi (Debug) trên web app giả lập 2D cho đến khi robot chạy hoàn hảo.
+2. Trẻ bấm nút "Xuất code Arduino", hệ thống sẽ cho tải về file .ino hoặc nạp thẳng vào mạch Arduino thật qua cổng USB (sử dụng công nghệ Web Serial API trực tiếp từ trình duyệt Chrome).
+3. Robot thật ngoài đời sẽ chạy y hệt như những gì trẻ đã thấy trên màn hình giả lập. Đây sẽ là một điểm cộng (Unique Selling Point) cực lớn cho sản phẩm của bạn.
+
+PHẦN 1: Cấu trúc dữ liệu & Logic Robot (JavaScript) => ArduinoCar2D.js
+Hệ thống giả lập (như Matter.js hoặc vòng lặp requestAnimationFrame) sẽ gọi hàm update() liên tục sau mỗi khung hình để cập nhật vị trí mới dựa trên vận tốc của hai bánh xe.
+
+PHẦN 2: Cấu trúc một Bài học Mẫu (Dành cho trẻ)
+
+🎯 Tên bài học: "Robot Lau Nhà Thông Minh - Vượt Qua Chướng Ngại Vật"
+• Độ tuổi phù hợp: 9 - 13 tuổi.
+• Ngôn ngữ áp dụng: Kéo thả khối lệnh (Blockly) dịch ra Python.
+• Mô hình thực tế: Xe Arduino lắp cảm biến siêu âm phía trước.
+
+1. Cốt truyện & Nhiệm vụ (Mission Introduction): "Chào mừng Kỹ sư nhí! Hôm nay căn phòng của chúng ta bị xáo trộn với rất nhiều hộp đồ chơi rơi trên sàn. 
+Bạn hãy lập trình cho chú Robot Lau Nhà di chuyển tự động. Khi gặp hộp đồ chơi (khoảng cách < 20cm), robot phải tự động rẽ sang hướng khác để không bị kẹt nhé!"
+
+2. Mục tiêu chiến thắng (Win Condition)
+• Robot lau sạch 80% diện tích phòng trong vòng 60 giây.
+• Không được đâm sầm vào tường hoặc hộp đồ chơi quá 3 lần (vật lý va chạm sẽ trừ điểm).
+
+3. Các "Khối lệnh" cung cấp cho trẻ (Toolbox)
+Giao diện chỉ hiển thị các khối lệnh cần thiết cho bài học này để trẻ không bị ngợp:
+• Hành động:
+	• Di chuyển tiến (Tốc độ: 80)
+	• Xoay phải (Tốc độ: 50)
+	• Dừng lại
+• Cảm biến:
+	• Khoảng cách phía trước (cm)
+• Logic & Vòng lặp:
+	• Nếu [Điều kiện] thì... Nếu không thì...
+	• Lặp lại mãi mãi (Vòng lặp chính)
+	• Toán tử so sánh: [ < ], [ > ]
+
+4. Đoạn mã mẫu kỳ vọng trẻ sẽ xếp (Expected Logic)
+Khi trẻ xếp các khối lệnh này, hệ thống sẽ chạy logic tương đương như sau ở backend: => 4 ExpectedLogic_py
+
+
+5. Hiển thị kết quả & Phần thưởng (Feedback & Reward)
+• Thành công: Hiện màn hình chúc mừng rực rỡ kèm hiệu ứng âm thanh: "Tuyệt vời! Bạn đã mở khóa Huy hiệu 'Kỹ sư Điều khiển Tự động'! Thêm 100 điểm kinh nghiệm (XP)".
+• Thất bại (Ví dụ robot bị kẹt vào góc tường do trẻ quên lệnh rẽ): Hệ thống không báo lỗi code mà trợ lý AI sẽ gợi ý thân thiện: "Ồ! Robot đang bị kẹt vào tường kìa. Bạn đã kiểm tra xem khoảng cách đến tường nhỏ hơn bao nhiêu thì cần rẽ chưa? Hãy thử điều chỉnh lại khối lệnh Nếu nhé!"

@@ -1,0 +1,63 @@
+class LineSensorSystem {
+    constructor(offsetFromCenter = 15, forwardDistance = 30) {
+        this.forwardDistance = forwardDistance; // Khoảng cách từ tâm robot ra phía trước (d)
+        this.offset = offsetFromCenter;         // Khoảng cách từ mắt giữa sang mắt trái/phải (w)
+        
+        // Trạng thái của 3 mắt đọc (0: Nền trắng, 1: Vạch đen)
+        this.states = { left: 0, center: 0, right: 0 };
+        
+        // Lưu tọa độ thực tế của các mắt để vẽ lên UI (tùy chọn)
+        this.positions = { left: {x:0, y:0}, center: {x:0, y:0}, right: {x:0, y:0} };
+    }
+
+    /**
+     * Cập nhật trạng thái đọc vạch của cảm biến
+     * @param {Object} robot - Đối tượng robot chứa (x, y, angle)
+     * @param {CanvasRenderingContext2D} ctx - Context của Canvas chứa bản đồ vạch đường
+     */
+    update(robot, ctx) {
+        const cos = Math.cos(robot.angle);
+        const sin = Math.sin(robot.angle);
+
+        // 1. Tính toán tọa độ (x, y) của 3 mắt đọc trên màn hình
+        // Mắt Giữa (Center)
+        this.positions.center.x = robot.x + this.forwardDistance * cos;
+        this.positions.center.y = robot.y + this.forwardDistance * sin;
+
+        // Mắt Trái (Left) - Lệch một khoảng (-offset) theo trục vuông góc với hướng xe
+        this.positions.left.x = robot.x + this.forwardDistance * cos - this.offset * sin;
+        this.positions.left.y = robot.y + this.forwardDistance * sin + this.offset * cos;
+
+        // Mắt Phải (Right) - Lệch một khoảng (+offset)
+        this.positions.right.x = robot.x + this.forwardDistance * cos + this.offset * sin;
+        this.positions.right.y = robot.y + this.forwardDistance * sin - this.offset * cos;
+
+        // 2. Quét màu pixel tại các tọa độ đó và chuyển sang hệ Nhị phân (0 hoặc 1)
+        this.states.left = this.isPixelBlack(ctx, this.positions.left.x, this.positions.left.y);
+        this.states.center = this.isPixelBlack(ctx, this.positions.center.x, this.positions.center.y);
+        this.states.right = this.isPixelBlack(ctx, this.positions.right.x, this.positions.right.y);
+
+        return this.states;
+    }
+
+    /**
+     * Hàm kiểm tra xem pixel tại tọa độ (x, y) có phải là màu đen (vạch đường) hay không
+     */
+    isPixelBlack(ctx, x, y) {
+        // Đảm bảo tọa độ nằm trong phạm vi canvas để tránh crash
+        if (x < 0 || x >= ctx.canvas.width || y < 0 || y >= ctx.canvas.height) return 0;
+
+        // Lấy dữ liệu RGBA của 1 pixel tại tọa độ (x, y)
+        // Hàm này trả về mảng [R, G, B, A] từ 0-255
+        const pixel = ctx.getImageData(Math.floor(x), Math.floor(y), 1, 1).data;
+        
+        const r = pixel[0];
+        const g = pixel[1];
+        const b = pixel[2];
+
+        // Ngưỡng (Threshold) để xác định màu tối/đen. 
+        // Nếu trung bình cộng của R, G, B < 100 thì coi như đang đè lên vạch đen
+        const brightness = (r + g + b) / 3;
+        return brightness < 100 ? 1 : 0;
+    }
+}

@@ -1,0 +1,63 @@
+class ArduinoCar2D {
+    constructor(x, y, angle = 0) {
+        // --- 1. Trạng thái vật lý ---
+        this.x = x;               // Tọa độ X trên màn hình (pixels)
+        this.y = y;               // Tọa độ Y trên màn hình (pixels)
+        this.angle = angle;       // Góc quay của robot (tính bằng Radian, 0 là hướng sang phải)
+        this.radius = 25;         // Kích thước thân xe (bán kính vòng tròn bao phủ)
+        this.wheelBase = 40;      // Khoảng cách giữa 2 bánh xe (độ rộng trục xe)
+
+        // --- 2. Bộ điều khiển Động cơ (Lệnh từ Code của trẻ) ---
+        this.leftWheelSpeed = 0;  // Vận tốc bánh trái (-100 đến 100)
+        this.rightWheelSpeed = 0; // Vận tốc bánh phải (-100 đến 100)
+        this.maxSpeed = 4;        // Giới hạn tốc độ di chuyển tối đa trong giả lập
+
+        // --- 3. Dữ liệu Cảm biến (Đọc đầu vào môi trường) ---
+        this.sensors = {
+            ultrasonicDistance: 999, // Khoảng cách tới vật cản trước mặt (cm/pixels)
+            lineSensors: [0, 1, 0]   // Trạng thái 3 mắt đọc dưới gầm xe: [Trái, Giữa, Phải] (0: Trắng, 1: Đen)
+        };
+    }
+
+    /**
+     * Hàm nhận lệnh điều khiển động cơ từ code của trẻ (tương tự hàm trong Arduino)
+     */
+    setMotors(leftSpeed, rightSpeed) {
+        // Giới hạn giá trị truyền vào từ -100% đến 100%
+        const clamp = (val) => Math.max(-100, Math.min(100, val));
+        
+        // Quy đổi phần trăm tốc độ ra vận tốc thực tế trong game
+        this.leftWheelSpeed = (clamp(leftSpeed) / 100) * this.maxSpeed;
+        this.rightWheelSpeed = (clamp(rightSpeed) / 100) * this.maxSpeed;
+    }
+
+    /**
+     * Hàm cập nhật vị trí vật lý (Được gọi liên tục trong vòng lặp Game Loop)
+     * Áp dụng thuật toán Differential Drive Kinematics
+     */
+    update(deltaTime) {
+        // Tốc độ trung bình tiến lên của robot
+        const linearVelocity = (this.leftWheelSpeed + this.rightWheelSpeed) / 2;
+        
+        // Tốc độ góc (vận tốc xoay hướng của robot)
+        const angularVelocity = (this.rightWheelSpeed - this.leftWheelSpeed) / this.wheelBase;
+
+        // 1. Cập nhật góc quay mới
+        this.angle += angularVelocity * deltaTime;
+
+        // 2. Cập nhật tọa độ X, Y mới dựa trên hướng (angle) hiện tại
+        this.x += linearVelocity * Math.cos(this.angle) * deltaTime;
+        this.y += linearVelocity * Math.sin(this.angle) * deltaTime;
+    }
+
+    /**
+     * Hàm cập nhật dữ liệu cảm biến (Nhận thông tin từ môi trường map)
+     */
+    updateSensors(environmentData) {
+        // Giả lập bắn tia (Raycasting) để tính toán khoảng cách vật cản
+        this.sensors.ultrasonicDistance = this.calculateRaycast(environmentData);
+        
+        // Giả lập đọc màu sàn tại vị trí 3 mắt đọc dưới gầm
+        this.sensors.lineSensors = this.readFloorPixels(environmentData);
+    }
+}
